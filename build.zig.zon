@@ -1,0 +1,21 @@
+.{
+    .name = "glfw",
+    .version = "0.0.0",
+    .paths = .{
+        "include/",
+        "src/",
+        "build.zig",
+        "build.zig.zon",
+        "CONTRIBUTORS.md",
+        "LICENSE.md",
+        "README.md",
+        "update.sh",
+        "verify.sh",
+    },
+    .dependencies = .{
+        .vulkan_headers = .{
+            .url = "https://pkg.machengine.org/vulkan-headers/e33f2e482893a90bb36d67649ab30d5236ac21ab.tar.gz",
+            .hash = "122017098e4ca00dac1a9d30d152a6e6e9522843219c6df4489210fb7c8a6e4c7c1a",
+        },
+    },
+}

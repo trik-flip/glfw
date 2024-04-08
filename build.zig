@@ -4,16 +4,22 @@ pub fn build(b: *std.build.Builder) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    //==============================================================================//
     const shared = b.option(bool, "shared", "Build as a shared library") orelse false;
     const use_opengl = b.option(bool, "opengl", "Build with OpenGL") orelse false;
     const use_gles = b.option(bool, "gles", "Build with GLES") orelse false;
-    const lib = std.Build.Step.Compile.create(b, .{
+    const lib = b.addStaticLibrary(.{
         .name = "glfw3",
-        .kind = .lib,
-        .linkage = if (shared) .dynamic else .static,
         .target = target,
         .optimize = optimize,
     });
+    // const lib = std.Build.Step.Compile.create(b, .{
+    //     .name = "glfw3",
+    //     .kind = .lib,
+    //     .linkage = if (shared) .dynamic else .static,
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
     lib.addIncludePath(.{ .path = "include" });
     lib.linkLibC();
     if (shared) lib.defineCMacro("_GLFW_BUILD_DLL", "1");
@@ -54,24 +60,24 @@ pub fn build(b: *std.build.Builder) void {
     lib.addCSourceFiles(&base_source_files, &flags);
     lib.addCSourceFiles(&windows_source_files, &flags);
     b.installArtifact(lib);
+    //==============================================================================//
+    const glfw_mod = b.addModule("glfw", .{
+        .source_file = .{ .path = "module/glfw.zig" },
+    });
+    _ = glfw_mod;
+    //==============================================================================//
+    const exe = b.addExecutable(.{
+        .name = "mujoco_exe",
+        .root_source_file = .{ .path = "module/main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.addIncludePath(.{ .path = "include" });
+    exe.linkLibrary(lib);
 
-    // lib.addCSourceFiles(&base_source_files, &c_flags);
-    // t.addCSourceFiles(&windows_source_files, &c_flags);
-
-    // lib.addIncludePath(.{ .path = "./include/" });
-    // lib.addIncludePath(.{ .path = "./src/" });
-    // lib.linkLibC();
-
-    // t.addIncludePath(.{ .path = "./include/" });
-    // t.addIncludePath(.{ .path = "./src/" });
-    // t.linkLibC();
-
-    // if (lib.optimize != .Debug)
-    //     lib.strip = true;
-
-    // t.linkLibrary(lib);
-
-    // b.installArtifact(t);
+    b.installArtifact(exe);
+    const run_exe = b.addRunArtifact(exe);
+    b.step("run", "Run code").dependOn(&run_exe.step);
 }
 const base_source_files = [_][]const u8{
     // .c files for all targets (https://github.com/glfw/glfw/blob/076bfd55be45e7ba5c887d4b32aa03d26881a1fb/src/CMakeLists.txt#L4)
